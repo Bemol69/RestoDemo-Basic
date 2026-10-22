@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { one, run } from "@/lib/db";
+import { notifyStaff } from "@/lib/push";
 
 // Public: a customer presses "Llamar al mesero" and must say which table they are at.
 const hits = new Map<string, number[]>();
@@ -30,5 +31,8 @@ export async function POST(req: Request) {
   if (open) return NextResponse.json({ ok: true, id: open.id });
 
   const res = await run("INSERT INTO calls (restaurant_id, table_label) VALUES (?, ?)", [r.id, table]);
-  return NextResponse.json({ ok: true, id: Number(res.lastInsertRowid) });
+  const id = Number(res.lastInsertRowid);
+  // Wake up the waiters' phones (Web Push). Awaited so serverless hosts do not cut it off; never fails the call.
+  await notifyStaff(r.id, { title: `🔔 Mesa ${table} te llama`, body: "Un cliente necesita al mesero.", tag: `call-${id}`, url: "/admin" }).catch(() => undefined);
+  return NextResponse.json({ ok: true, id });
 }

@@ -26,6 +26,16 @@ Settings → Environment Variables:
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | cuenta del administrador (contraseña fuerte) |
 | `MESERO_EMAIL` / `MESERO_PASSWORD` | cuenta del mesero |
 
+Para los avisos al celular (Web Push) agrega también:
+
+| Variable | Valor |
+|---|---|
+| `VAPID_PUBLIC_KEY` | clave pública (`npx web-push generate-vapid-keys`) |
+| `VAPID_PRIVATE_KEY` | clave privada del mismo par (secreta) |
+| `VAPID_SUBJECT` | `mailto:` con un correo tuyo |
+
+Sin ellas todo funciona igual, solo que sin avisos con la app cerrada.
+
 Sin las variables de cuentas, en producción **no se crea ningún usuario** (así la web pública nunca queda con contraseñas conocidas). Las tablas y el menú de demostración se crean solos en la primera visita.
 
 ## 3. Redeploy
@@ -38,3 +48,12 @@ Deployments → el último → ⋯ → **Redeploy** (las variables nuevas solo s
 - El plan Hobby de Vercel es solo para uso **no comercial**. Para cobrar a un restaurante usa el plan Pro u otro hosting.
 - Si el menú crece mucho, cambia `lib/media.ts` por almacenamiento de objetos (Vercel Blob o Cloudflare R2).
 - Los QR usan el dominio con el que abras la portada: abre `/` desde tu dominio final antes de imprimirlos.
+
+## Avisos al celular del mesero (Android)
+
+1. Con las variables VAPID puestas y el deploy hecho, el mesero entra a `/admin` **desde Chrome en su Android**.
+2. Pulsa **🔔 Activar avisos** y acepta el permiso de notificaciones.
+3. Pulsa **Enviar aviso de prueba**: debe llegar una notificación aunque cierre Chrome.
+4. Opcional: menú ⋮ de Chrome → **Instalar app / Agregar a pantalla de inicio**, para abrir el panel como una app.
+
+Cada celular debe activar los avisos una vez. En iPhone solo funciona con la web instalada en la pantalla de inicio (iOS 16.4+).

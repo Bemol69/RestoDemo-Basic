@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { answerCall } from "@/app/admin/actions";
 import type { Call } from "@/lib/db";
+import PushPanel from "@/components/PushPanel";
 
 const POLL_MS = 3000;
 
@@ -33,7 +34,6 @@ export default function CallsBoard() {
   const [calls, setCalls] = useState<Call[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [live, setLive] = useState(true);
-  const [notif, setNotif] = useState<NotificationPermission | "none">("none");
   const [, tick] = useState(0);
   const maxId = useRef<number | null>(null);
   const baseTitle = useRef("");
@@ -80,7 +80,6 @@ export default function CallsBoard() {
   // tab is shown again or the connection comes back.
   useEffect(() => {
     baseTitle.current = document.title;
-    if ("Notification" in window) setNotif(Notification.permission);
     load();
 
     let worker: Worker | null = null;
@@ -131,11 +130,6 @@ export default function CallsBoard() {
     load();
   }
 
-  async function enableNotifications() {
-    beep(); // unlocks audio in the browser
-    if ("Notification" in window) setNotif(await Notification.requestPermission());
-  }
-
   const pending = calls.filter((c) => c.status === "pendiente").reverse();
   const done = calls.filter((c) => c.status !== "pendiente");
 
@@ -147,13 +141,7 @@ export default function CallsBoard() {
       </div>
       <p className="muted">Esta pantalla se actualiza sola. No necesitas recargar.</p>
 
-      {notif !== "granted" && (
-        <div className="panel noprint">
-          <strong>Activa los avisos</strong>
-          <p className="muted" style={{ margin: ".3rem 0 .6rem" }}>Para que suene y te llegue una notificación cuando una mesa llame, aunque estés en otra pestaña.</p>
-          <button onClick={enableNotifications}>🔔 Activar sonido y notificaciones</button>
-        </div>
-      )}
+      <PushPanel unlockSound={beep} />
 
       {loaded && pending.length === 0 && <p className="muted">Cuando un cliente toque “Llamar al mesero” aparecerá aquí con su número de mesa.</p>}
 

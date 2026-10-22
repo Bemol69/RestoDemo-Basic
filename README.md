@@ -29,5 +29,5 @@ Ver [docs/DEPLOY.md](docs/DEPLOY.md). Resumen: base de datos gratis en Turso + 4
 
 - Fotos del menú: Wikimedia Commons con licencias libres, créditos en `public/menu/CREDITS.md`.
 - Las fotos que sube el admin se guardan en la base de datos (se reducen en el navegador antes de subir).
-- Los avisos al mesero funcionan con su pestaña abierta (sonido + notificación del navegador). Con la app cerrada haría falta Web Push.
+- El panel del mesero se actualiza solo. Con **Web Push** (Android/Chrome) el celular recibe un aviso aunque la app esté cerrada; ver `docs/DEPLOY.md`.
 - Un solo llamado abierto por mesa: si el cliente toca dos veces, no se duplica.
