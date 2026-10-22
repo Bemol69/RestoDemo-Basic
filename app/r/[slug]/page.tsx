@@ -10,7 +10,7 @@ type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ mesa?:
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const r = await one<Restaurant>(`SELECT ${RESTAURANT_COLS} FROM restaurants WHERE slug = ?`, [slug]);
-  return { title: r ? `${r.name} · Carta` : "Carta" };
+  return { title: r ? `Carta · ${r.name}` : "Carta" };
 }
 
 export default async function PublicMenu({ params, searchParams }: Props) {

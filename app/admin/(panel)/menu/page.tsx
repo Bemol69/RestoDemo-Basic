@@ -5,35 +5,40 @@ import { deleteCategory, deleteItem, saveCategory, saveItem, saveSettings } from
 
 export const dynamic = "force-dynamic";
 
-function ItemFields({ item, categories, catId }: { item?: Item; categories: Category[]; catId?: number }) {
+const TAGS = ["vegano", "vegetariano", "sin gluten", "picante"];
+
+function DishFields({ item, categories, catId }: { item?: Item; categories: Category[]; catId?: number }) {
+  const tags = item?.tags.split(",") ?? [];
   return (
     <>
       {item && <input type="hidden" name="id" value={item.id} />}
-      <div className="item-edit">
-        <div className="item-photo">
-          {item?.image_url ? <img src={item.image_url} alt="" /> : <span>🍽️<br />Sin foto</span>}
+      {!(item && categories.length > 1) && <input type="hidden" name="category_id" value={item?.category_id ?? catId} />}
+      <div className="dish-grid">
+        <div className="photo-box">
+          <div className="preview">{item?.image_url ? <img src={item.image_url} alt="" /> : <span>Sin foto</span>}</div>
+          <input type="file" name="image" accept="image/*" aria-label="Elegir foto" />
         </div>
-        <div className="item-fields">
+        <div>
           <div className="row">
-            <label>Nombre<input name="name" defaultValue={item?.name} required maxLength={80} /></label>
-            <label>Precio<input name="price" type="number" step="0.01" min="0" defaultValue={item ? item.price_cents / 100 : ""} required /></label>
+            <label>Nombre del plato<input name="name" defaultValue={item?.name} required maxLength={80} /></label>
+            <label style={{ maxWidth: 170 }}>Precio<input name="price" type="number" step="0.01" min="0" defaultValue={item ? item.price_cents / 100 : ""} required /></label>
           </div>
           <label>Descripción<textarea name="description" defaultValue={item?.description} rows={2} maxLength={300} /></label>
-          <div className="row">
-            <label>
-              Categoría
-              <select name="category_id" defaultValue={item?.category_id ?? catId}>
+          <div className="tag-pick">
+            {TAGS.map((t) => (
+              <label key={t}><input type="checkbox" name="tags" value={t} defaultChecked={tags.includes(t)} /> {t}</label>
+            ))}
+          </div>
+          {categories.length > 1 && item && (
+            <details className="more">
+              <summary>Mover a otra categoría</summary>
+              <select name="category_id" defaultValue={item.category_id}>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
-            </label>
-            <label>Etiquetas (coma)<input name="tags" defaultValue={item?.tags} placeholder="vegano, sin gluten" /></label>
-          </div>
-          <div className="row">
-            <label>Cambiar foto (archivo)<input type="file" name="image" accept="image/*" /></label>
-            <label>o URL de foto<input name="image_url" defaultValue={item?.image_url} placeholder="https://…" /></label>
-          </div>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input type="checkbox" name="available" defaultChecked={item ? !!item.available : true} style={{ width: "auto" }} /> Disponible (si lo desmarcas, no aparece como pedido pero sigue en la carta)
+            </details>
+          )}
+          <label className="switch">
+            <input type="checkbox" name="available" defaultChecked={item ? !!item.available : true} /> Disponible hoy
           </label>
         </div>
       </div>
@@ -48,63 +53,69 @@ export default async function MenuAdmin() {
 
   return (
     <>
-      <div className="row" style={{ alignItems: "center" }}>
-        <h1 style={{ margin: 0 }}>Editar carta</h1>
-        <a className="btn ghost" href={`/r/${r.slug}`} target="_blank" style={{ flex: "0 0 auto" }}>👁️ Ver carta pública</a>
+      <div className="page-title">
+        <h1>Mi carta</h1>
+        <a className="btn ghost" href={`/r/${r.slug}`} target="_blank">Ver como cliente ↗</a>
       </div>
-      <p className="muted">Cambia lo que quieras y pulsa <strong>Guardar</strong> en cada plato. Los cambios se ven al instante en la carta del cliente.</p>
 
-      <SaveForm action={saveSettings} label="💾 Guardar datos del restaurante" className="panel">
-        <h2>Datos del restaurante</h2>
-        <div className="row">
-          <label>Nombre<input name="name" defaultValue={r.name} required /></label>
-          <label>Moneda (3 letras)<input name="currency" defaultValue={r.currency} maxLength={3} /></label>
-          <label>Color<input name="accent" type="color" defaultValue={r.accent} style={{ height: 42, padding: 2 }} /></label>
-          <label>Mesas<input name="tables_count" type="number" min="1" max="200" defaultValue={r.tables_count} /></label>
-        </div>
-        <label>Descripción corta<textarea name="description" defaultValue={r.description} rows={2} maxLength={200} /></label>
-      </SaveForm>
+      <div className="help">
+        <span><b>1.</b> Cambia lo que quieras en el plato</span>
+        <span><b>2.</b> Pulsa el botón verde <b>Guardar</b></span>
+        <span><b>3.</b> Listo: el cliente lo ve al instante</span>
+      </div>
 
       {categories.map((c) => (
-        <section className="panel" key={c.id}>
-          <SaveForm action={saveCategory} label="💾 Guardar nombre" className="cat-head">
-            <input type="hidden" name="id" value={c.id} />
-            <div className="row">
-              <label>Categoría<input name="name" defaultValue={c.name} style={{ fontWeight: 700 }} /></label>
-              <label style={{ maxWidth: 90 }}>Orden<input name="position" type="number" defaultValue={c.position} /></label>
-            </div>
-          </SaveForm>
+        <section className="cat-block" key={c.id}>
+          <div className="cat-title">
+            <SaveForm action={saveCategory} label="Guardar nombre" ghost>
+              <input type="hidden" name="id" value={c.id} />
+              <input type="hidden" name="position" value={c.position} />
+              <div className="row" style={{ alignItems: "center" }}>
+                <input name="name" defaultValue={c.name} aria-label="Nombre de la categoría" style={{ fontFamily: "var(--serif)", fontSize: "1.3rem", fontWeight: 700 }} />
+              </div>
+            </SaveForm>
+          </div>
 
           {items.filter((i) => i.category_id === c.id).map((i) => (
-            <div className="item-card" key={i.id}>
-              <SaveForm action={saveItem} label="💾 Guardar cambios">
-                <ItemFields item={i} categories={categories} />
+            <div className="dish" key={i.id}>
+              <SaveForm action={saveItem} label="💾 Guardar">
+                <DishFields item={i} categories={categories} />
               </SaveForm>
-              <SaveForm action={deleteItem} label="🗑️ Eliminar plato" danger confirm={`¿Eliminar "${i.name}"?`} doneLabel="Eliminado">
+              <SaveForm action={deleteItem} label="Eliminar este plato" danger confirm={`¿Eliminar "${i.name}"?`} doneLabel="Eliminado">
                 <input type="hidden" name="id" value={i.id} />
               </SaveForm>
             </div>
           ))}
 
-          <div className="item-card new">
-            <h3>➕ Agregar plato a {c.name}</h3>
+          <div className="dish new">
+            <h3>➕ Nuevo plato en {c.name}</h3>
             <SaveForm action={saveItem} label="➕ Agregar plato" doneLabel="✓ Plato agregado" resetOnSave>
-              <ItemFields categories={categories} catId={c.id} />
+              <DishFields categories={categories} catId={c.id} />
             </SaveForm>
           </div>
 
-          <SaveForm action={deleteCategory} label="Eliminar categoría y sus platos" ghost confirm={`¿Eliminar la categoría "${c.name}" con todos sus platos?`} doneLabel="Eliminada">
-            <input type="hidden" name="id" value={c.id} />
-          </SaveForm>
+          <div className="cat-foot">
+            <SaveForm action={deleteCategory} label="Eliminar categoría" danger confirm={`¿Eliminar "${c.name}" con todos sus platos?`} doneLabel="Eliminada">
+              <input type="hidden" name="id" value={c.id} />
+            </SaveForm>
+          </div>
         </section>
       ))}
 
       <SaveForm action={saveCategory} label="➕ Crear categoría" doneLabel="✓ Categoría creada" resetOnSave className="panel">
         <h2>Nueva categoría</h2>
+        <p className="muted">Por ejemplo: Entradas, Bebidas, Postres.</p>
+        <input type="hidden" name="position" value={categories.length} />
+        <label>Nombre<input name="name" required /></label>
+      </SaveForm>
+
+      <SaveForm action={saveSettings} label="💾 Guardar datos" className="panel">
+        <h2>Datos del restaurante</h2>
         <div className="row">
-          <label>Nombre<input name="name" placeholder="Entradas, Bebidas, Postres…" required /></label>
-          <label style={{ maxWidth: 90 }}>Orden<input name="position" type="number" defaultValue={categories.length} /></label>
+          <label>Nombre<input name="name" defaultValue={r.name} required /></label>
+          <label style={{ maxWidth: 140 }}>Cantidad de mesas<input name="tables_count" type="number" min="1" max="200" defaultValue={r.tables_count} /></label>
         </div>
+        <label>Descripción corta<textarea name="description" defaultValue={r.description} rows={2} maxLength={200} /></label>
       </SaveForm>
     </>
   );

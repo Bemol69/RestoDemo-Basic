@@ -1,28 +1,33 @@
-# MenuQR
+# Restaurant Demo
 
-Dos ventanas, nada más:
+Web de un restaurante con carta digital y llamado al mesero por QR.
 
-1. **Cliente**: escanea el QR → ve la carta (con fotos reales) → toca **🔔 Llamar al mesero**, escribe su número de mesa y llama. Ve en pantalla cuándo el mesero ya lo atiende.
-2. **Mesero** (`/admin`): inicia sesión y recibe cada llamado con el número de mesa, sonido y notificación del navegador. Toca **Voy para allá** y al cliente le cambia el aviso.
+- **Cliente**: escanea el QR de su mesa → ve la carta con fotos → toca **Llamar al mesero** e indica su mesa.
+- **Mesero** (`/admin`): recibe cada llamado con el número de mesa, sonido y notificación, y toca **Voy para allá**.
+- **Administrador** (`/admin`): edita la carta (platos, precios, fotos, categorías) con un botón **Guardar** visible.
 
-La página `/` muestra el QR de la carta (y los QR por mesa para imprimir, que ya traen `?mesa=N`).
-
-## Arrancar
+## Probar en tu PC
 
 ```bash
 npm install
-npm run seed     # restaurante demo con 8 platos
 npm run dev      # http://localhost:3000
 ```
 
-- Carta: http://localhost:3000/r/demo?mesa=4
-- Panel: http://localhost:3000/admin → dos cuentas, mesero (llamados) y admin (editar carta). Credenciales de demo en `scripts/seed.ts`.
+Sin configuración usa un archivo SQLite local y crea cuentas de demostración (ver `lib/seed.ts`).
 
-Para escanear el QR con un celular real, el celular y el PC deben estar en el mismo Wi-Fi y el servidor debe escucharlo: `npx next dev -H 0.0.0.0`. La portada usa la IP del PC automáticamente.
+| Pantalla | Ruta |
+|---|---|
+| Inicio y QR | `/` |
+| Carta del cliente | `/r/demo?mesa=4` |
+| Personal (mesero y admin) | `/admin` |
+
+## Publicar en Vercel
+
+Ver [docs/DEPLOY.md](docs/DEPLOY.md). Resumen: base de datos gratis en Turso + 4 variables de entorno en Vercel.
 
 ## Notas
 
-- Fotos de Wikimedia Commons con licencias libres; créditos en `public/menu/CREDITS.md`.
-- Los avisos funcionan con la pestaña del mesero abierta (sonido + notificación). Para avisar con la app cerrada hace falta Web Push (siguiente paso).
+- Fotos del menú: Wikimedia Commons con licencias libres, créditos en `public/menu/CREDITS.md`.
+- Las fotos que sube el admin se guardan en la base de datos (se reducen en el navegador antes de subir).
+- Los avisos al mesero funcionan con su pestaña abierta (sonido + notificación del navegador). Con la app cerrada haría falta Web Push.
 - Un solo llamado abierto por mesa: si el cliente toca dos veces, no se duplica.
-- Stack: Next.js + SQLite (`local.db`), en producción Turso gratis. Ver `docs/ARCHITECTURE.md`.

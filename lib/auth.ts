@@ -5,7 +5,11 @@ import bcrypt from "bcryptjs";
 import { one, RESTAURANT_COLS, type Restaurant } from "./db";
 
 const COOKIE = "menuqr_session";
-const secret = () => new TextEncoder().encode(process.env.SESSION_SECRET || "dev-only-secret-change-me");
+const secret = () => {
+  const s = process.env.SESSION_SECRET;
+  if (!s && process.env.NODE_ENV === "production") throw new Error("Falta la variable SESSION_SECRET.");
+  return new TextEncoder().encode(s || "dev-only-secret-change-me");
+};
 
 export type Role = "admin" | "mesero";
 

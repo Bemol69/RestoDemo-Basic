@@ -73,8 +73,8 @@ export async function saveItem(f: FormData): Promise<string | null> {
   } catch (e) {
     return e instanceof Error ? e.message : "No se pudo subir la foto.";
   }
-  const image = upload ?? (str(f, "image_url") || current?.image_url || "");
-  const tags = str(f, "tags").split(",").map((t) => t.trim().toLowerCase()).filter(Boolean).join(",");
+  const image = upload ?? current?.image_url ?? "";
+  const tags = f.getAll("tags").map((t) => String(t).toLowerCase()).join(",");
   const vals = [num(f, "category_id"), str(f, "name"), str(f, "description"), toCents(str(f, "price")), image, tags, f.get("available") ? 1 : 0];
 
   if (id) {
@@ -101,12 +101,9 @@ export async function deleteItem(f: FormData): Promise<string | null> {
 
 export async function saveSettings(f: FormData): Promise<string | null> {
   const r = await requireAdmin();
-  const accent = /^#[0-9a-fA-F]{6}$/.test(str(f, "accent")) ? str(f, "accent") : r.accent;
-  await run("UPDATE restaurants SET name=?, description=?, currency=?, accent=?, tables_count=? WHERE id=?", [
+  await run("UPDATE restaurants SET name=?, description=?, tables_count=? WHERE id=?", [
     str(f, "name") || r.name,
     str(f, "description"),
-    str(f, "currency").toUpperCase().slice(0, 3) || r.currency,
-    accent,
     Math.min(Math.max(num(f, "tables_count"), 1), 200),
     r.id,
   ]);

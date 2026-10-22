@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Category, Item, Restaurant } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
+import Logo from "@/components/Logo";
 
 type Props = { restaurant: Restaurant; categories: Category[]; items: Item[]; table: string };
 
@@ -61,9 +62,16 @@ export default function MenuClient({ restaurant: r, categories, items, table }: 
   };
 
   return (
-    <div className="menu" style={{ "--accent": r.accent } as React.CSSProperties}>
+    <>
+    <div className="menu-top">
+      <div className="wrap">
+        <Logo href="/" light />
+        {table && <span className="mesa-badge">Mesa {table}</span>}
+      </div>
+    </div>
+    <div className="menu">
       <header className="menu-hero">
-        <p className="eyebrow">{table ? `Mesa ${table}` : "Nuestra carta"}</p>
+        <p className="eyebrow">Nuestra carta</p>
         <h1>{r.name}</h1>
         {r.description && <p className="muted">{r.description}</p>}
       </header>
@@ -158,5 +166,6 @@ export default function MenuClient({ restaurant: r, categories, items, table }: 
         </div>
       )}
     </div>
+    </>
   );
 }

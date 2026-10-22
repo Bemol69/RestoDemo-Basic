@@ -72,6 +72,12 @@ const SCHEMA = [
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('admin','mesero'))
   )`,
+  `CREATE TABLE IF NOT EXISTS media (
+    id TEXT PRIMARY KEY,
+    mime TEXT NOT NULL,
+    data TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
   `CREATE TABLE IF NOT EXISTS calls (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     restaurant_id INTEGER NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
@@ -98,9 +104,13 @@ function ready() {
   globalForDb.__ready ??= (async () => {
     await client.batch(SCHEMA, "write");
     for (const m of MIGRATIONS) await client.execute(m).catch(() => undefined);
+    await (await import("./seed")).ensureSeed((sql, args = []) => client.execute({ sql, args }));
   })();
   return globalForDb.__ready;
 }
+
+/** Creates tables and first-run data; the scripts call this eagerly. */
+export const init = ready;
 
 export async function query<T = Record<string, unknown>>(sql: string, args: InValue[] = []): Promise<T[]> {
   await ready();
