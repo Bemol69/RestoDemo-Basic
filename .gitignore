@@ -1,0 +1,10 @@
+node_modules
+.next
+*.db
+*.db-journal
+.env*.local
+.env
+public/uploads/*
+!public/uploads/.gitkeep
+next-env.d.ts
+tsconfig.tsbuildinfo
