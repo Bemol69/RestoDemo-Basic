@@ -150,3 +150,9 @@ details > summary { cursor: pointer; font-weight: 600; list-style: none; display
 .call button { padding: .8rem 1.2rem; font-weight: 700; background: var(--orange); }
 .call.done { border: 1px solid var(--line); animation: none; padding: 10px 16px; opacity: .65; }
 .mesa-big { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+
+.bar-nav { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.bar-nav a { color: #ddd; text-decoration: none; font-size: .9rem; }
+.bar-nav a:hover { color: #fff; }
+.waiter-main { max-width: 760px; }
+.waiter-bar .pill { background: var(--orange); color: #fff; margin-left: 6px; }

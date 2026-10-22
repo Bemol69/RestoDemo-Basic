@@ -16,7 +16,7 @@ npm run dev      # http://localhost:3000
 ```
 
 - Carta: http://localhost:3000/r/demo?mesa=4
-- Mesero: http://localhost:3000/admin → `mesero@menuqr.app` / `mesero12345`
+- Panel: http://localhost:3000/admin → dos cuentas, mesero (llamados) y admin (editar carta). Credenciales de demo en `scripts/seed.ts`.
 
 Para escanear el QR con un celular real, el celular y el PC deben estar en el mismo Wi-Fi y el servidor debe escucharlo: `npx next dev -H 0.0.0.0`. La portada usa la IP del PC automáticamente.
 
