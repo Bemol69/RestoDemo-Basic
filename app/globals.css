@@ -209,3 +209,7 @@ details.more summary { cursor: pointer; font-weight: 600; color: var(--wine); ma
 .cat-name { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; color: var(--wine-dark); margin-bottom: 6px; }
 label.remove { display: flex; align-items: center; gap: 8px; color: #b42318; font-weight: 600; font-size: .82rem; margin: .8rem 0 0; cursor: pointer; }
 label.remove input { width: auto; margin: 0; accent-color: #b42318; }
+
+.live { font-size: .85rem; font-weight: 700; padding: .3rem .8rem; border-radius: 999px; }
+.live.on { color: var(--ok); background: #e3f3ea; }
+.live.off { color: #b42318; background: #fbe4e1; }
