@@ -5,8 +5,9 @@ const globalForDb = globalThis as unknown as { __db?: Client; __ready?: Promise<
 const client =
   globalForDb.__db ??
   createClient({
-    url: process.env.DATABASE_URL || "file:local.db",
-    authToken: process.env.DATABASE_AUTH_TOKEN || undefined,
+    // DATABASE_* are ours; TURSO_* are what the Vercel "Turso" integration creates automatically.
+    url: process.env.DATABASE_URL || process.env.TURSO_DATABASE_URL || "file:local.db",
+    authToken: process.env.DATABASE_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN || undefined,
   });
 globalForDb.__db = client;
 

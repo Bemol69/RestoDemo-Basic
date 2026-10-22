@@ -6,12 +6,11 @@ type Props = {
   action: (f: FormData) => Promise<string | null>;
   label: string;
   doneLabel?: string;
-  resetOnSave?: boolean;
-  confirm?: string;
-  danger?: boolean;
-  ghost?: boolean;
+  /** Names starting with this prefix are cleared after a successful save (blank "new" cards). */
+  clearPrefix?: string;
+  /** Fixed bar at the bottom of the screen, always in reach. */
+  sticky?: boolean;
   children?: React.ReactNode;
-  className?: string;
 };
 
 // Phone photos are huge; shrink them in the browser (max 1400px, JPEG) before uploading.
@@ -30,18 +29,21 @@ async function shrink(file: File): Promise<File> {
   }
 }
 
-// Runs a server action from a form and always tells the user what happened:
-// "Guardando…", "✓ Guardado" or the error. Server actions return null on success.
-export default function SaveForm({ action, label, doneLabel = "✓ Guardado", resetOnSave, confirm: ask, danger, ghost, children, className }: Props) {
+// One form, one button: runs a server action and always says what happened
+// ("Guardando…", "✓ Guardado" or the error). The action returns null on success.
+export default function SaveForm({ action, label, doneLabel = "✓ Todo guardado", clearPrefix, sticky, children }: Props) {
   const ref = useRef<HTMLFormElement>(null);
   const [state, setState] = useState<"idle" | "saving" | "done" | "error">("idle");
   const [error, setError] = useState("");
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (ask && !window.confirm(ask)) return;
+    const form = e.currentTarget;
+    const removing = form.querySelectorAll('input[name$=".delete"]:checked').length;
+    if (removing && !window.confirm(`Vas a eliminar ${removing} elemento${removing > 1 ? "s" : ""}. ¿Continuar?`)) return;
+
     setState("saving");
-    const data = new FormData(e.currentTarget);
+    const data = new FormData(form);
     for (const [k, v] of [...data.entries()]) {
       if (v instanceof File && v.size > 0 && v.type.startsWith("image/")) data.set(k, await shrink(v));
     }
@@ -51,20 +53,26 @@ export default function SaveForm({ action, label, doneLabel = "✓ Guardado", re
       setState("error");
       return;
     }
-    if (resetOnSave) ref.current?.reset();
+    if (clearPrefix) {
+      form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(`[name^="${clearPrefix}"]`).forEach((el) => {
+        if (el instanceof HTMLInputElement && (el.type === "checkbox" || el.type === "radio")) el.checked = el.defaultChecked && el.name.endsWith(".available");
+        else el.value = "";
+      });
+    }
     setState("done");
-    setTimeout(() => setState("idle"), 2500);
+    setTimeout(() => setState("idle"), 3000);
   }
 
   return (
-    <form ref={ref} onSubmit={submit} className={className}>
+    <form ref={ref} onSubmit={submit}>
       {children}
-      <div className="save-row">
-        <button className={danger ? "danger" : ghost ? "ghost" : "save"} disabled={state === "saving"}>
-          {state === "saving" ? "Guardando…" : label}
-        </button>
-        {state === "done" && <span className="ok">{doneLabel}</span>}
-        {state === "error" && <span className="err">{error}</span>}
+      <div className={sticky ? "save-bar" : "save-row"}>
+        <div className="save-bar-in">
+          <button className="save" disabled={state === "saving"}>{state === "saving" ? "Guardando…" : label}</button>
+          {state === "done" && <span className="ok">{doneLabel}</span>}
+          {state === "error" && <span className="err">{error}</span>}
+          {state === "idle" && sticky && <span className="muted save-hint">Los cambios no se aplican hasta que guardes.</span>}
+        </div>
       </div>
     </form>
   );
