@@ -38,31 +38,42 @@ export async function answerCall(id: number) {
 }
 
 /* ---------- Menu (admin only) ---------- */
+// Each action returns null on success or a message to show the admin.
 
-export async function saveCategory(f: FormData) {
+export async function saveCategory(f: FormData): Promise<string | null> {
   const r = await requireAdmin();
   const id = num(f, "id");
   const name = str(f, "name");
-  if (!name) return;
+  if (!name) return "Escribe un nombre para la categoría.";
   if (id) await run("UPDATE categories SET name = ?, position = ? WHERE id = ? AND restaurant_id = ?", [name, num(f, "position"), id, r.id]);
   else await run("INSERT INTO categories (restaurant_id, name, position) VALUES (?, ?, ?)", [r.id, name, num(f, "position")]);
   revalidatePath("/admin/menu");
+  revalidatePath("/r/[slug]", "page");
+  return null;
 }
 
-export async function deleteCategory(f: FormData) {
+export async function deleteCategory(f: FormData): Promise<string | null> {
   const r = await requireAdmin();
   await run("DELETE FROM items WHERE category_id = ? AND restaurant_id = ?", [num(f, "id"), r.id]);
   await run("DELETE FROM categories WHERE id = ? AND restaurant_id = ?", [num(f, "id"), r.id]);
   revalidatePath("/admin/menu");
+  return null;
 }
 
-export async function saveItem(f: FormData) {
+export async function saveItem(f: FormData): Promise<string | null> {
   const r = await requireAdmin();
   const id = num(f, "id");
-  if (!str(f, "name") || !(await one("SELECT id FROM categories WHERE id = ? AND restaurant_id = ?", [num(f, "category_id"), r.id]))) return;
+  if (!str(f, "name")) return "El plato necesita un nombre.";
+  if (!(await one("SELECT id FROM categories WHERE id = ? AND restaurant_id = ?", [num(f, "category_id"), r.id]))) return "Elige una categoría.";
 
   const current = id ? await one<{ image_url: string }>("SELECT image_url FROM items WHERE id = ? AND restaurant_id = ?", [id, r.id]) : undefined;
-  const image = (await savePhoto(f.get("image") as File | null, r.id)) ?? (str(f, "image_url") || current?.image_url || "");
+  let upload: string | null = null;
+  try {
+    upload = await savePhoto(f.get("image") as File | null, r.id);
+  } catch (e) {
+    return e instanceof Error ? e.message : "No se pudo subir la foto.";
+  }
+  const image = upload ?? (str(f, "image_url") || current?.image_url || "");
   const tags = str(f, "tags").split(",").map((t) => t.trim().toLowerCase()).filter(Boolean).join(",");
   const vals = [num(f, "category_id"), str(f, "name"), str(f, "description"), toCents(str(f, "price")), image, tags, f.get("available") ? 1 : 0];
 
@@ -78,21 +89,17 @@ export async function saveItem(f: FormData) {
     );
   }
   revalidatePath("/admin/menu");
+  return null;
 }
 
-export async function deleteItem(f: FormData) {
+export async function deleteItem(f: FormData): Promise<string | null> {
   const r = await requireAdmin();
   await run("DELETE FROM items WHERE id = ? AND restaurant_id = ?", [num(f, "id"), r.id]);
   revalidatePath("/admin/menu");
+  return null;
 }
 
-export async function toggleAvailable(f: FormData) {
-  const r = await requireAdmin();
-  await run("UPDATE items SET available = 1 - available WHERE id = ? AND restaurant_id = ?", [num(f, "id"), r.id]);
-  revalidatePath("/admin/menu");
-}
-
-export async function saveSettings(f: FormData) {
+export async function saveSettings(f: FormData): Promise<string | null> {
   const r = await requireAdmin();
   const accent = /^#[0-9a-fA-F]{6}$/.test(str(f, "accent")) ? str(f, "accent") : r.accent;
   await run("UPDATE restaurants SET name=?, description=?, currency=?, accent=?, tables_count=? WHERE id=?", [
@@ -104,4 +111,5 @@ export async function saveSettings(f: FormData) {
     r.id,
   ]);
   revalidatePath("/", "layout");
+  return null;
 }
